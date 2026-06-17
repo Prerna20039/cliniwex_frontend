@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Button } from '@/app/components/ui/button'
+import { Button } from '@/src/app/components/ui/button'
 
 export default function DoctorLogin() {
   const [email, setEmail] = useState('')

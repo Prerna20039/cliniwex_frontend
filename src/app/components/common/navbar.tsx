@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Button } from'@/app/components/ui/button'
+import { Button } from '../ui/button'
 
 export function Navbar() {
   return (
@@ -22,12 +22,12 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center gap-3">
-            <Link href="/doctor-login">
+            <Link href="/doctor/login">
               <Button variant="outline" className="text-primary border-primary hover:bg-primary hover:text-white">
                 Doctor Login
               </Button>
             </Link>
-            <Link href="/patient-login">
+            <Link href="/patient/login">
               <Button className="bg-primary hover:bg-primary/90 text-white">
                 Patient Login
               </Button>
