@@ -8,16 +8,18 @@ export type AppointmentStatus =
 
 export type QueueStatus =
   | 'WAITING'
+  | 'IN_PROGRESS'
   | 'COMPLETED'
+  | 'CANCELLED'
 
 export type Status = AppointmentStatus | QueueStatus
 
 interface StatusBadgeProps {
-  status: Status
+  status: Status | string
   label?: string
 }
 
-const statusConfig: Record<Status, any> = {
+const statusConfig: Record<string, any> = {
   PENDING: {
     bg: 'bg-yellow-50',
     text: 'text-yellow-700',
@@ -48,15 +50,30 @@ const statusConfig: Record<Status, any> = {
     border: 'border-orange-200',
     dot: 'bg-orange-500',
   },
+  IN_PROGRESS: {
+    bg: 'bg-blue-50',
+    text: 'text-blue-700',
+    border: 'border-blue-200',
+    dot: 'bg-blue-500',
+  },
 }
 
 export default function StatusBadge({ status, label }: StatusBadgeProps) {
-  const config = statusConfig[status]
+  const key = String(status).toUpperCase()
+
+  const config = statusConfig[key] ?? {
+    bg: 'bg-gray-100',
+    text: 'text-gray-700',
+    border: 'border-gray-300',
+    dot: 'bg-gray-400',
+  }
 
   return (
-    <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${config.bg} ${config.text} ${config.border}`}>
+    <span
+      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium border ${config.bg} ${config.text} ${config.border}`}
+    >
       <span className={`w-2 h-2 rounded-full ${config.dot}`} />
-      {label ?? status}
+      {label ?? key}
     </span>
   )
 }

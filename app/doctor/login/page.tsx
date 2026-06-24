@@ -12,120 +12,162 @@ export default function DoctorLogin() {
 
   const router = useRouter()
 
+  const safeParseResponse = async (response: Response) => {
+    const text = await response.text()
+
+    try {
+      return JSON.parse(text)
+    } catch {
+      return text
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // ✅ EMAIL VALIDATION
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+    if (!emailRegex.test(email.trim())) {
+      alert('Enter a valid email')
+      return
+    }
+
+    // ✅ PASSWORD VALIDATION
+    if (password.length < 6) {
+      alert('Password must be at least 6 characters')
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      console.log('Navigating to dashboard...')
+      const response = await fetch(
+        'https://cliniwexbackend-production.up.railway.app/api/doctors/login',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: '*/*',
+          },
+          body: JSON.stringify({
+            email: email.trim(),
+            password,
+          }),
+        }
+      )
 
-      setTimeout(() => {
-        setIsLoading(false)
-        router.push('/doctor/dashboard')
-      }, 500)
+      const data = await safeParseResponse(response)
+
+      console.log('LOGIN RESPONSE:', data)
+
+      if (!response.ok) {
+        const errorMessage =
+          typeof data === 'string'
+            ? data
+            : data?.message || 'Login failed'
+
+        throw new Error(errorMessage)
+      }
+
+      const successMessage =
+        typeof data === 'string'
+          ? data
+          : data?.message || 'Login successful'
+
+      // ✅ SAVE TOKEN
+      if (typeof data === 'object' && data?.token) {
+        localStorage.setItem('token', data.token)
+      }
+
+      // ✅ SAVE EMAIL FOR PROFILE PAGE
+      localStorage.setItem('doctorEmail', email.trim())
+
+      console.log(
+        'Saved doctorEmail:',
+        localStorage.getItem('doctorEmail')
+      )
+
+      alert(successMessage)
+
+      router.push('/doctor/dashboard')
     } catch (error: any) {
-      setIsLoading(false)
+      console.error(error)
       alert(error.message || 'Something went wrong')
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#E0F2FE] via-[#F8FAFC] to-[#CFFAFE]">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50">
 
-      {/* Background Blobs */}
-      <div className="absolute -top-20 -left-20 sm:-top-32 sm:-left-32 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-blue-400/30 rounded-full blur-[100px] sm:blur-[120px]" />
-      <div className="absolute -bottom-20 -right-20 sm:-bottom-32 sm:-right-32 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-cyan-400/30 rounded-full blur-[100px] sm:blur-[120px]" />
+      <div className="absolute -top-20 -left-20 w-[280px] h-[280px] bg-blue-300/20 rounded-full blur-[120px]" />
+      <div className="absolute -bottom-20 -right-20 w-[320px] h-[320px] bg-cyan-300/20 rounded-full blur-[120px]" />
 
-      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-6">
-        
-        <div className="w-full max-w-sm sm:max-w-md md:max-w-lg">
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4">
 
-          {/* Card */}
-          <div className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-[32px] shadow-[0_20px_60px_rgba(37,99,235,0.15)] border border-white p-6 sm:p-8 md:p-10">
+        <div className="w-full max-w-sm sm:max-w-md">
 
-            {/* Logo */}
-            <div className="flex items-center gap-3 mb-6 sm:mb-8">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-white text-lg sm:text-xl font-bold">C</span>
+          <div className="bg-white/90 backdrop-blur-xl border border-white shadow-[0_20px_60px_rgba(37,99,235,0.12)] rounded-2xl sm:rounded-[32px] p-6 sm:p-8">
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+                <span className="text-white font-bold text-lg">C</span>
               </div>
-
-              <span className="text-xl sm:text-2xl font-bold text-slate-900">
+              <span className="text-xl font-bold text-slate-900">
                 Clinivex
               </span>
             </div>
 
-            {/* Heading */}
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-2">
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">
               Doctor Sign In
             </h1>
 
-            <p className="text-sm sm:text-base text-slate-500 mb-6 sm:mb-8">
-              Enter your credentials to access your dashboard
+            <p className="text-sm text-slate-500 mb-6">
+              Welcome back, please login to continue
             </p>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Email Address
-                </label>
+              <input
+                type="email"
+                placeholder="Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
 
-                <input
-                  type="email"
-                  placeholder="doctor@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Password
-                </label>
-
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
 
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-11 sm:h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm sm:text-base"
+                className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium"
               >
                 {isLoading ? 'Signing In...' : 'Sign In'}
               </Button>
 
             </form>
 
-            {/* Footer */}
-            <div className="mt-6 sm:mt-8 border-t border-slate-200 pt-5 sm:pt-6">
-
-              <p className="text-center text-sm sm:text-base text-slate-600">
-                Don't have an account?{' '}
+            <div className="mt-6 border-t pt-5 border-slate-200">
+              <p className="text-center text-sm text-slate-600">
+                Don’t have an account?{' '}
                 <Link
                   href="/doctor/register"
-                  className="font-semibold text-blue-600 hover:text-blue-700"
+                  className="text-blue-600 font-semibold"
                 >
                   Sign Up
                 </Link>
               </p>
-
-              <Link
-                href="/"
-                className="block text-center mt-4 sm:mt-5 text-xs sm:text-sm text-blue-600 hover:text-blue-700"
-              >
-                Back to Home
-              </Link>
-
             </div>
 
           </div>

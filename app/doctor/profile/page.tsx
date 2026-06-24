@@ -1,158 +1,309 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
-import { StatCard } from '@/components/doctor/stat-card'
-import StatusBadge  from '@/components/common/status-badge'
+import { useState } from 'react'
 import DoctorSidebar from '@/components/doctor/sidebar'
+import { Button } from '@/components/ui/button'
 
-export default function DoctorProfile() {
+interface DoctorProfileData {
+  name: string
+  phoneNumber: string
+  specialization: string
+
+  qualification: string
+  experienceYears: number | string
+  consultationFee: number | string
+
+  clinicName: string
+  clinicAddress: string
+  workingHours: string
+  bio: string
+}
+
+const BASE_URL = 'https://cliniwexbackend-production.up.railway.app'
+
+export default function DoctorProfilePage() {
+  const [profile, setProfile] = useState<DoctorProfileData>({
+    name: '',
+    phoneNumber: '',
+    specialization: '',
+
+    qualification: '',
+    experienceYears: '',
+    consultationFee: '',
+
+    clinicName: '',
+    clinicAddress: '',
+    workingHours: '',
+    bio: '',
+  })
+
+  const [saving, setSaving] = useState(false)
+
+  const getDoctorEmail = () => {
+    if (typeof window === 'undefined') return null
+    return localStorage.getItem('doctorEmail')
+  }
+
+  const saveProfile = async () => {
+    const email = getDoctorEmail()
+
+    if (!email) {
+      alert('Doctor email not found. Please login again.')
+      return
+    }
+
+    if (!profile.name.trim()) {
+      alert('Doctor Name is required')
+      return
+    }
+
+    if (!profile.phoneNumber.trim()) {
+      alert('Phone Number is required')
+      return
+    }
+
+    if (profile.phoneNumber.length !== 10) {
+      alert('Phone Number must be exactly 10 digits')
+      return
+    }
+
+    if (!profile.specialization.trim()) {
+      alert('Specialization is required')
+      return
+    }
+
+    if (!profile.qualification.trim()) {
+      alert('Qualification is required')
+      return
+    }
+
+    if (!profile.clinicName.trim()) {
+      alert('Clinic Name is required')
+      return
+    }
+
+    if (!profile.clinicAddress.trim()) {
+      alert('Clinic Address is required')
+      return
+    }
+
+    try {
+      setSaving(true)
+
+      const response = await fetch(
+        `${BASE_URL}/api/doctors/profile/email/${email}`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: profile.name,
+            phoneNumber: profile.phoneNumber,
+            specialization: profile.specialization,
+
+            qualification: profile.qualification,
+            experienceYears: Number(profile.experienceYears || 0),
+            consultationFee: Number(profile.consultationFee || 0),
+
+            clinicName: profile.clinicName,
+            clinicAddress: profile.clinicAddress,
+            workingHours: profile.workingHours,
+            bio: profile.bio,
+          }),
+        }
+      )
+
+      const result = await response.text()
+
+      console.log('SAVE RESPONSE:', result)
+
+      if (!response.ok) {
+        console.error(result)
+        alert(`Failed to save profile\n${result}`)
+        return
+      }
+
+      alert('Profile saved successfully')
+    } catch (error) {
+      console.error(error)
+      alert('Something went wrong')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target
+
+    if (
+      (name === 'experienceYears' ||
+        name === 'consultationFee') &&
+      value !== '' &&
+      !/^\d*$/.test(value)
+    ) {
+      return
+    }
+
+    if (
+      name === 'phoneNumber' &&
+      value !== '' &&
+      !/^\d*$/.test(value)
+    ) {
+      return
+    }
+
+    setProfile((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
   return (
-    <div className="min-h-screen flex bg-background">
-
-      {/* SIDEBAR */}
+    <div className="min-h-screen flex bg-gray-50">
       <DoctorSidebar />
 
-      {/* MAIN CONTENT */}
-      <main className="flex-1 ml-64 px-4 md:px-8 py-6">
+      <main className="flex-1 ml-64 p-6">
+        <div className="max-w-5xl mx-auto">
 
-        {/* HEADER */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-            My Profile
-          </h1>
-          <p className="text-muted-foreground">
-            Manage your professional information
-          </p>
-        </div>
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold">
+              Doctor Profile
+            </h1>
 
-        {/* STATUS BAR */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <StatusBadge status="PENDING" />
-          <StatusBadge status="ACCEPTED" />
-          <StatusBadge status="COMPLETED" />
-          <StatusBadge status="CANCELLED" />
-        </div>
-
-        {/* PROFILE CARD */}
-        <div className="bg-card border border-border rounded-xl p-6 md:p-8 mb-8">
-          <div className="flex flex-col md:flex-row gap-6">
-
-            <div className="w-20 h-20 md:w-24 md:h-24 bg-primary rounded-xl flex items-center justify-center text-3xl">
-              👨‍⚕️
-            </div>
-
-            <div className="flex-1">
-              <h2 className="text-xl md:text-2xl font-bold text-foreground">
-                Dr. Michael Johnson
-              </h2>
-
-              <p className="text-primary font-semibold mb-2">
-                Cardiologist
-              </p>
-
-              <p className="text-muted-foreground mb-6">
-                Experienced cardiologist with 15+ years of practice.
-              </p>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div>
-                  <p className="text-xs text-muted-foreground">License</p>
-                  <p className="font-semibold">LIC-001234</p>
-                </div>
-
-                <div>
-                  <p className="text-xs text-muted-foreground">Experience</p>
-                  <p className="font-semibold">15+ Years</p>
-                </div>
-
-                <div>
-                  <p className="text-xs text-muted-foreground">Fee</p>
-                  <p className="font-semibold">$50</p>
-                </div>
-
-                <div>
-                  <p className="text-xs text-muted-foreground">Rating</p>
-                  <p className="font-semibold">4.8/5</p>
-                </div>
-              </div>
-
-              <Button className="bg-primary text-white">
-                Edit Profile
-              </Button>
-            </div>
-
-          </div>
-        </div>
-
-        {/* STATS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <StatCard
-            icon="👥"
-            label="Total Patients"
-            value="324"
-            description="Registered with you"
-          />
-
-          <StatCard
-            icon="📅"
-            label="Consultations"
-            value="1,240"
-            description="All-time"
-          />
-        </div>
-
-        {/* PRACTICE DETAILS */}
-        <div className="bg-card border border-border rounded-xl p-6 md:p-8 mb-8">
-          <h2 className="text-lg font-bold mb-6">Practice Details</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <input className="input border border-border p-2 rounded" defaultValue="Heart Care Clinic" />
-            <input className="input border border-border p-2 rounded" defaultValue="+1 555 123 4567" />
-            <input className="input border border-border p-2 rounded" defaultValue="123 Medical Plaza" />
-            <input className="input border border-border p-2 rounded" defaultValue="9 AM - 6 PM" />
-          </div>
-        </div>
-
-        {/* SETTINGS */}
-        <div className="bg-card border border-border rounded-xl p-6 md:p-8">
-          <h2 className="text-lg font-bold mb-6">Settings</h2>
-
-          <div className="space-y-4">
-
-            <div className="flex justify-between">
-              <div>
-                <p className="font-medium">Email Notifications</p>
-                <p className="text-sm text-muted-foreground">
-                  Appointment alerts
-                </p>
-              </div>
-              <input type="checkbox" defaultChecked />
-            </div>
-
-            <div className="flex justify-between">
-              <div>
-                <p className="font-medium">SMS Notifications</p>
-                <p className="text-sm text-muted-foreground">
-                  Queue updates
-                </p>
-              </div>
-              <input type="checkbox" defaultChecked />
-            </div>
-
-          </div>
-
-          <div className="mt-6 flex gap-3">
-            <Button className="bg-primary text-white">
-              Save Changes
-            </Button>
-
-            <Button variant="outline">
-              Cancel
+            <Button
+              onClick={saveProfile}
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : 'Save Profile'}
             </Button>
           </div>
-        </div>
 
+          <div className="bg-white p-6 rounded-xl shadow border">
+
+            <h2 className="font-semibold mb-6 text-lg">
+              Doctor Information
+            </h2>
+
+            <div className="grid md:grid-cols-2 gap-4">
+
+              <Input
+                label="Doctor Name"
+                name="name"
+                value={profile.name}
+                onChange={handleChange}
+                placeholder="Enter Doctor Name"
+              />
+
+              <Input
+                label="Phone Number"
+                name="phoneNumber"
+                value={profile.phoneNumber}
+                onChange={handleChange}
+                maxLength={10}
+                placeholder="Enter 10 digit phone number"
+              />
+
+              <Input
+                label="Specialization"
+                name="specialization"
+                value={profile.specialization}
+                onChange={handleChange}
+                placeholder="Enter Specialization"
+              />
+
+              <Input
+                label="Qualification"
+                name="qualification"
+                value={profile.qualification}
+                onChange={handleChange}
+                placeholder="MBBS, MD, etc."
+              />
+
+              <Input
+                label="Experience (Years)"
+                name="experienceYears"
+                value={profile.experienceYears}
+                onChange={handleChange}
+                type="number"
+                placeholder="Years of experience"
+              />
+
+              <Input
+                label="Consultation Fee"
+                name="consultationFee"
+                value={profile.consultationFee}
+                onChange={handleChange}
+                type="number"
+                placeholder="Consultation Fee"
+              />
+
+              <Input
+                label="Clinic Name"
+                name="clinicName"
+                value={profile.clinicName}
+                onChange={handleChange}
+                placeholder="Clinic Name"
+              />
+
+              <Input
+                label="Clinic Address"
+                name="clinicAddress"
+                value={profile.clinicAddress}
+                onChange={handleChange}
+                placeholder="Clinic Address"
+              />
+
+              <Input
+                label="Working Hours"
+                name="workingHours"
+                value={profile.workingHours}
+                onChange={handleChange}
+                placeholder="9 AM - 5 PM"
+              />
+
+              <div className="md:col-span-2">
+                <label className="text-sm text-gray-500 block mb-2">
+                  Bio
+                </label>
+
+                <textarea
+                  name="bio"
+                  value={profile.bio}
+                  onChange={handleChange}
+                  rows={5}
+                  className="w-full border rounded-lg p-3"
+                  placeholder="Write about yourself..."
+                />
+              </div>
+
+            </div>
+          </div>
+
+        </div>
       </main>
+    </div>
+  )
+}
+
+function Input({
+  label,
+  ...props
+}: {
+  label: string
+} & React.InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <div>
+      <label className="text-sm text-gray-500 block mb-1">
+        {label}
+      </label>
+
+      <input
+        {...props}
+        className="w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      />
     </div>
   )
 }
