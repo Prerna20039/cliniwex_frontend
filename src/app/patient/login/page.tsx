@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import axios from 'axios'
 import Link from 'next/link'
 import { Button } from '@/src/app/components/ui/button'
 
@@ -9,14 +10,39 @@ export default function PatientLogin() {
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+
+
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+
+  try {
     setIsLoading(true)
-    setTimeout(() => {
-      window.location.href = '/patient/dashboard'
-      setIsLoading(false)
-    }, 1000)
+
+    const { data } = await axios.post('https://cliniwexbackend-production.up.railway.app/api/patient/login', {
+      email,
+      password,
+    })
+
+    console.log(data)
+
+    // Store the JWT token!
+    localStorage.setItem('token', data.token)
+    localStorage.setItem('patientName', data.name)
+    localStorage.setItem('patientEmail', data.email)
+    localStorage.setItem('patientId', data.patientId.toString())
+
+    // Optional: Store token expiry time
+    const expiryTime = Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+    localStorage.setItem('tokenExpiry', expiryTime.toString())
+
+    window.location.href = '/patient/dashboard'
+  } catch (error: any) {
+    console.error(error.response?.data?.message)
+    alert(error.response?.data?.message || 'Something went wrong')
+  } finally {
+    setIsLoading(false)
   }
+}
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">

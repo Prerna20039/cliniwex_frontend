@@ -29,7 +29,7 @@ export default function DoctorRegister() {
 
     try {
       const response = await fetch(
-        'http://localhost:8080/api/patients/register',
+        'https://cliniwexbackend-production.up.railway.app/api/patient/register',
         {
           method: 'POST',
           headers: {
@@ -51,7 +51,7 @@ export default function DoctorRegister() {
       }
 
       alert('Registration successful!')
-      window.location.href = '/doctor/dashboard'
+      window.location.href = '/patient/login'
     } catch (error) {
       console.error(error)
       alert('Registration failed')
