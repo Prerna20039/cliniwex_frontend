@@ -3,15 +3,15 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { Button } from '../ui/button'
+import { Button } from '@/src/app/components/ui/button'
 
-export function DoctorSidebar() {
+export default function DoctorSidebar() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
 
   const links = [
     { href: '/doctor/dashboard', label: 'Dashboard', icon: '📊' },
-    { href: '/doctor/appointments', label: 'Appointments', icon: '📅' },
+    { href: '/doctor/appointment', label: 'Appointments', icon: '📅' },
     { href: '/doctor/queue', label: 'Queue Management', icon: '⏱️' },
     { href: '/doctor/analytics', label: 'Analytics', icon: '📈' },
     { href: '/doctor/profile', label: 'Profile', icon: '👤' },
@@ -59,13 +59,12 @@ export function DoctorSidebar() {
         </div>
 
         <div className="absolute bottom-6 left-6 right-6">
-          <Button
-            onClick={() => window.location.href = '/'}
-            variant="outline"
-            className="w-full border-border text-foreground hover:bg-secondary"
-          >
-            Logout
-          </Button>
+<Button
+  onClick={() => (window.location.href = '/')}
+  className="w-full bg-blue-600 text-white hover:bg-blue-700"
+>
+  Logout
+</Button>
         </div>
       </aside>
 

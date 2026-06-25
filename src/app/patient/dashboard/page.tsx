@@ -160,6 +160,21 @@ useEffect(() => {
 }, [])
 
 useEffect(() => {
+  const token = localStorage.getItem('token')
+
+  if (!token) {
+    router.replace('/patient/login')
+    return
+  }
+
+  const loadDashboard = async () => {
+    // existing code
+  }
+
+  loadDashboard()
+}, [])
+
+useEffect(() => {
 
   const patientId = localStorage.getItem('patientId')
 
@@ -179,20 +194,17 @@ useEffect(() => {
     console.log('WebSocket Connected')
 
     client.subscribe(
-      `/topic/stats/${patientId}`,
-      (message) => {
+  `/topic/stats/${patientId}`,
+  (message) => {
 
-        const updatedStats: StatsResponse =
-          JSON.parse(message.body)
+    console.log("RAW MESSAGE:", message.body)
 
-        setStats(updatedStats)
+    const updatedStats: StatsResponse =
+      JSON.parse(message.body)
 
-        console.log(
-          'Stats Updated',
-          updatedStats
-        )
-      }
-    )
+    setStats(updatedStats)
+  }
+)
   }
 
   client.onStompError = (frame) => {
@@ -273,6 +285,11 @@ useEffect(() => {
     )
   }
 
+  const handleLogout = () => {
+  localStorage.clear()
+  router.push('/patient/login')
+}
+
   return (
     <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-8">
 
@@ -301,7 +318,7 @@ useEffect(() => {
           </div>
         </div>
 
-        <div className="mt-6 flex gap-3">
+        <div className="mt-6 flex flex-wrap gap-3">
   <Link href="/patient/queue-status">
     <Button variant="secondary">
       View Live Queue
@@ -316,6 +333,14 @@ useEffect(() => {
       Edit Profile
     </Button>
   </Link>
+
+  <Button
+    variant="destructive"
+    className="bg-white text-primary hover:bg-gray-100"
+    onClick={handleLogout}
+  >
+    Logout
+  </Button>
 </div>
       </div>
 

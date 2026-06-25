@@ -3,8 +3,13 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/src/app/components/ui/button'
+import { useRouter } from 'next/navigation'
+
+const BASE_URL = 'https://cliniwexbackend-production.up.railway.app'
 
 export default function DoctorRegister() {
+  const router = useRouter()
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -12,145 +17,155 @@ export default function DoctorRegister() {
     specialty: '',
     phone: '',
   })
+
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // =========================
+  // ✅ SINGLE CLEAN SUBMIT
+  // =========================
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // =========================
+    // VALIDATION (INSIDE FUNCTION)
+    // =========================
+
+    if (!formData.name.trim()) {
+      return alert('Name is required')
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      return alert('Enter a valid email')
+    }
+
+    if (formData.password.length < 6) {
+      return alert('Password must be at least 6 characters')
+    }
+
+    if (!formData.specialty.trim()) {
+      return alert('Specialty is required')
+    }
+
+    const phoneRegex = /^[0-9]{10}$/
+    if (!phoneRegex.test(formData.phone)) {
+      return alert('Phone number must be exactly 10 digits')
+    }
+
     setIsLoading(true)
-    setTimeout(() => {
-      window.location.href = '/doctor/dashboard'
+
+    try {
+      const response = await fetch(`${BASE_URL}/api/doctors/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      })
+
+      // ⚠️ backend returns TEXT (important fix)
+      const text = await response.text()
+
+      if (!response.ok) {
+        throw new Error(text || 'Registration failed')
+      }
+
+      // =========================
+      // SAVE EMAIL (SAFE WAY)
+      // =========================
+      localStorage.setItem('doctorEmail', formData.email)
+
+      alert(text || 'Doctor registered successfully!')
+
+      router.push('/doctor/profile')
+
+    } catch (error: any) {
+      console.error(error)
+      alert(error.message || 'Something went wrong')
+
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-8">
-          {/* Logo */}
-          <div className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold">C</span>
-            </div>
-            <span className="font-bold text-xl text-foreground">Clinivex</span>
-          </div>
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[#E0F2FE] via-[#F8FAFC] to-[#CFFAFE]">
 
-          <h1 className="text-2xl font-bold text-foreground mb-2">Doctor Registration</h1>
-          <p className="text-muted-foreground mb-6">Create your professional account</p>
+      <div className="absolute -top-20 -left-20 w-[300px] h-[300px] bg-blue-400/30 rounded-full blur-[120px]" />
+      <div className="absolute -bottom-20 -right-20 w-[300px] h-[300px] bg-cyan-400/30 rounded-full blur-[120px]" />
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-foreground mb-2">
-                Full Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Dr. John Doe"
-                required
-                className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              />
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4">
+
+        <div className="w-full max-w-sm sm:max-w-md">
+
+          <div className="bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-[32px] shadow-[0_20px_60px_rgba(37,99,235,0.15)] border border-white p-6 sm:p-8">
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white text-lg font-bold">C</span>
+              </div>
+              <span className="text-xl font-bold text-slate-900">
+                Clinivex
+              </span>
             </div>
 
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
-                Email Address
-              </label>
-              <input
-                id="email"
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="doctor@example.com"
-                required
-                className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">
+              Doctor Sign Up
+            </h1>
 
-            <div>
-              <label htmlFor="specialty" className="block text-sm font-medium text-foreground mb-2">
-                Specialty
-              </label>
-              <select
-                id="specialty"
-                name="specialty"
-                value={formData.specialty}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">Select specialty</option>
-                <option value="Cardiology">Cardiology</option>
-                <option value="Dermatology">Dermatology</option>
-                <option value="General Practice">General Practice</option>
-                <option value="Pediatrics">Pediatrics</option>
-                <option value="Surgery">Surgery</option>
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-2">
-                Phone Number
-              </label>
-              <input
-                id="phone"
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="+1 (555) 000-0000"
-                required
-                className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-foreground mb-2">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                required
-                className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full bg-primary hover:bg-primary/90 text-white py-2"
-            >
-              {isLoading ? 'Creating account...' : 'Create Account'}
-            </Button>
-          </form>
-
-          <div className="mt-6 pt-6 border-t border-border">
-            <p className="text-center text-muted-foreground">
-              Already have an account?{' '}
-              <Link href="/doctor/login" className="text-primary hover:underline font-medium">
-                Sign in
-              </Link>
+            <p className="text-sm text-slate-500 mb-6">
+              Create your professional account
             </p>
-          </div>
 
-          <div className="mt-4">
-            <Link href="/" className="text-center block text-sm text-primary hover:underline">
-              Back to home
-            </Link>
+            <form onSubmit={handleSubmit} className="space-y-4">
+
+              <input name="name" placeholder="Full Name"
+                value={formData.name} onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border" />
+
+              <input name="email" placeholder="Email"
+                value={formData.email} onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border" />
+
+              <input name="password" type="password" placeholder="Password"
+                value={formData.password} onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border" />
+
+              <input name="specialty" placeholder="Specialty"
+                value={formData.specialty} onChange={handleChange}
+                className="w-full px-4 py-3 rounded-xl border" />
+
+              <input name="phone" placeholder="Phone (10 digits)"
+                value={formData.phone}
+                onChange={(e) => {
+                  const v = e.target.value.replace(/[^0-9]/g, '')
+                  setFormData((p) => ({ ...p, phone: v }))
+                }}
+                maxLength={10}
+                className="w-full px-4 py-3 rounded-xl border" />
+
+              <Button type="submit" disabled={isLoading}
+                className="w-full h-11 bg-blue-600 text-white rounded-xl">
+                {isLoading ? 'Creating Account...' : 'Create Account'}
+              </Button>
+
+            </form>
+
+            <div className="mt-6 border-t pt-5">
+              <p className="text-center text-sm">
+                Already have account?{' '}
+                <Link href="/doctor/login" className="text-blue-600 font-semibold">
+                  Sign In
+                </Link>
+              </p>
+            </div>
+
           </div>
         </div>
       </div>
